@@ -4,13 +4,15 @@ import {
   getInvoiceById,
   updateInvoice,
 } from "@/app/actions/actions";
+import Calculators from "@/app/components/Calculators";
 import InvoiceInfo from "@/app/components/InvoiceInfo";
 import InvoiceLines from "@/app/components/InvoiceLines";
 import InvoicePdf from "@/app/components/InvoicePdf";
+import LoaderComponent from "@/app/components/LoaderComponent";
 import VatControl from "@/app/components/VatControl";
 import Wrapper from "@/app/components/Wrapper";
 import { Invoice, Totals } from "@/types/type";
-import { Save, Trash } from "lucide-react";
+import { Calculator, Save, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -20,14 +22,17 @@ const page = ({ params }: { params: Promise<{ invoiceId: string }> }) => {
   const [totals, setTotals] = useState<Totals | null>(null);
   const [isSavedDisabled, setIsSavedDisabled] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [fetchDataLoading, setFetchDataLoading] = useState<boolean>(false);
   const router = useRouter();
 
   const fetchInvoiceById = async () => {
     try {
       const { invoiceId } = await params;
+      setFetchDataLoading(true);
       const fetchedInvoice = await getInvoiceById(invoiceId);
       setInvoice(fetchedInvoice || null);
       setInitialInvoice(fetchedInvoice || null);
+      setFetchDataLoading(false);
     } catch (error) {
       console.log("Error fetching invoice by ID:", error);
     }
@@ -92,6 +97,8 @@ const page = ({ params }: { params: Promise<{ invoiceId: string }> }) => {
     }
   };
 
+  if (fetchDataLoading) return <LoaderComponent />;
+
   if (!invoice || !totals)
     return (
       <div className="flex justify-center items-center h-screen w-full">
@@ -133,6 +140,16 @@ const page = ({ params }: { params: Promise<{ invoiceId: string }> }) => {
           <button className="btn btn-accent btn-sm ml-4" onClick={handleDelete}>
             <Trash className="w-4" />
           </button>
+          <button
+            className="btn btn-accent btn-sm ml-4"
+            onClick={() =>
+              (
+                document.getElementById("my_modal_2") as HTMLDialogElement
+              ).showModal()
+            }
+          >
+            <Calculator className="w-4" />
+          </button>
         </div>
       </div>
       <div className="flex flex-col md:flex-row w-full gap-4">
@@ -164,6 +181,15 @@ const page = ({ params }: { params: Promise<{ invoiceId: string }> }) => {
           <InvoicePdf invoice={invoice} totals={totals} />
         </div>
       </div>
+
+      <dialog id="my_modal_2" className="modal">
+        <div className="modal-box bg-black">
+          <Calculators />
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
     </Wrapper>
   );
 };
