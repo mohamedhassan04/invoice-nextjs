@@ -1,5 +1,5 @@
 "use client";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { useClerk, UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Layers } from "lucide-react";
@@ -8,7 +8,8 @@ import { checkAndAddUser } from "../actions/actions";
 
 const Navbar = () => {
   const pathname = usePathname();
-  const { user } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
+  const { signOut } = useClerk();
   const navLink = [{ label: "Factures", href: "/" }];
 
   useEffect(() => {
@@ -16,6 +17,18 @@ const Navbar = () => {
       checkAndAddUser(user.primaryEmailAddress.emailAddress, user.fullName);
     }
   }, [user]);
+
+  // useEffect(() => {
+  //   if (isLoaded && isSignedIn) {
+  //     signOut(() => {
+  //       window.location.href = "/sign-in";
+  //     });
+  //   }
+  // }, [isLoaded, isSignedIn, signOut]);
+
+  // if (!isLoaded || !isSignedIn) {
+  //   return null;
+  // }
 
   // Function to check if the current path matches the link's href
   const isActiveLink = (href: string) => {

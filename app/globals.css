@@ -3,3 +3,8 @@
 @plugin "daisyui" {
   themes: all;
 }
+
+.scrollable {
+  overflow-y: auto;
+  max-height: 100vh;
+}

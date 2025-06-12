@@ -1,6 +1,8 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { Invoice } from "@/types/type";
+import { InvoiceLine } from "@prisma/client";
 import { randomBytes } from "crypto";
 
 export async function checkAndAddUser(email: string, name: string) {
@@ -106,5 +108,119 @@ export async function getInvoicesByEmail(email: string) {
     }
   } catch (error) {
     console.log("Error fetching invoices by email:", error);
+  }
+}
+
+export async function getInvoiceById(invoiceId: string) {
+  try {
+    const invoice = await prisma.invoice.findUnique({
+      where: { id: invoiceId },
+      include: {
+        lines: true,
+      },
+    });
+    if (!invoice) {
+      throw new Error("facture non trouvée");
+    }
+    return invoice;
+  } catch (error) {
+    console.log("Error fetching invoice by id:", error);
+  }
+}
+
+export async function updateInvoice(invoice: Invoice) {
+  try {
+    const existingInvoice = await prisma.invoice.findUnique({
+      where: { id: invoice.id },
+      include: {
+        lines: true,
+      },
+    });
+
+    if (!existingInvoice) {
+      throw new Error(`facture avec ce numéro ${invoice.id} introuvable`);
+    }
+
+    await prisma.invoice.update({
+      where: { id: invoice.id },
+      data: {
+        issuerName: invoice.issuerName,
+        issuerAddress: invoice.issuerAddress,
+        clientName: invoice.clientName,
+        clientAddress: invoice.clientAddress,
+        invoiceDate: invoice.invoiceDate,
+        dueDate: invoice.dueDate,
+        vatActive: invoice.vatActive,
+        vatRate: invoice.vatRate,
+        status: invoice.status,
+      },
+    });
+
+    const existingLines = existingInvoice?.lines;
+    const receivedLines = invoice.lines;
+
+    // Delete lines that are not in the received invoice
+    const linesToDelete = existingLines.filter(
+      (existingLine: any) =>
+        !receivedLines.some((line: InvoiceLine) => line.id === existingLine.id)
+    );
+
+    // Delete the lines
+    if (linesToDelete.length > 0) {
+      await prisma.invoiceLine.deleteMany({
+        where: {
+          id: {
+            in: linesToDelete.map((line: any) => line.id),
+          },
+        },
+      });
+    }
+
+    // Update existing lines that are in the received invoice
+    for (const line of receivedLines) {
+      const existingLine = existingLines.find((l: any) => l.id === line.id);
+      if (existingLine) {
+        const hasChanged =
+          line.quantity !== existingLine.quantity ||
+          line.unitPrice !== existingLine.unitPrice ||
+          line.description !== existingLine.description;
+        if (hasChanged) {
+          await prisma.invoiceLine.update({
+            where: { id: line.id },
+            data: {
+              quantity: line.quantity,
+              unitPrice: line.unitPrice,
+              description: line.description,
+            },
+          });
+        }
+      } else {
+        // create a new line
+        await prisma.invoiceLine.create({
+          data: {
+            quantity: line.quantity,
+            unitPrice: line.unitPrice,
+            description: line.description,
+            invoiceId: invoice.id,
+          },
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error updating invoice status:", error);
+  }
+}
+
+export async function deleteInvoice(invoiceId: string) {
+  try {
+    const deletedInvoice = await prisma.invoice.delete({
+      where: { id: invoiceId },
+    });
+    if (!deletedInvoice) {
+      throw new Error(`facture avec ce numéro ${invoiceId} introuvable`);
+    }
+    return deletedInvoice;
+  } catch (error) {
+    console.error("Error deleting invoice:", error);
   }
 }

@@ -72,8 +72,9 @@ const InvoiceComponent: React.FC<InvoiceComponentProps> = ({
       return acc + quantity * unitPrice;
     }, 0);
 
-    const totalVAT = totalHT * (1 + invoice.vatRate / 100);
-    return totalHT + totalVAT;
+    const totalVAT = totalHT * (invoice.vatRate / 100);
+    const totalTTC = totalHT + totalVAT;
+    return invoice.vatActive ? totalTTC : totalHT;
   };
   return (
     <div className="bg-base-200/90 p-5 rounded-xl space-y-2 shadow">
