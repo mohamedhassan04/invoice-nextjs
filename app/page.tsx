@@ -86,11 +86,7 @@ export default function Home() {
             <LoaderComponent />
           ) : (
             invoices.map((invoice, index) => (
-              <InvoiceComponent
-                key={invoice.id}
-                invoice={invoice}
-                index={index}
-              />
+              <InvoiceComponent key={invoice.id} invoice={invoice} />
             ))
           )}
         </div>
