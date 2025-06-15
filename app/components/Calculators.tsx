@@ -40,6 +40,7 @@ const Calculators = () => {
         setShowResult(true);
       } catch (error) {
         setDisplay("Error");
+        console.log("Error calculating result:", error);
       }
     } else setDisplay("");
   }
