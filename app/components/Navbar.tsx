@@ -1,5 +1,5 @@
 "use client";
-import { useClerk, UserButton, useUser } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Layers } from "lucide-react";
