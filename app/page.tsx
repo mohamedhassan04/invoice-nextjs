@@ -15,16 +15,13 @@ export default function Home() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isNameValid, setIsNameValid] = useState<boolean>(true);
   const [touched, setTouched] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const email = user?.primaryEmailAddress?.emailAddress as string;
   const fetchInvoices = async () => {
     try {
-      setIsLoading(true);
       const data = await getInvoicesByEmail(email);
       if (data) {
         setInvoices(data);
-        setIsLoading(false);
       }
     } catch (error) {
       console.log("Error fetching invoices:", error);
@@ -82,13 +79,9 @@ export default function Home() {
               <FilePlus />
             </div>
           </div>
-          {isLoading ? (
-            <LoaderComponent />
-          ) : (
-            invoices.map((invoice, index) => (
-              <InvoiceComponent key={invoice.id} invoice={invoice} />
-            ))
-          )}
+          {invoices.map((invoice, index) => (
+            <InvoiceComponent key={invoice.id} invoice={invoice} />
+          ))}
         </div>
         <dialog id="my_modal_3" className="modal">
           <div className="modal-box">
